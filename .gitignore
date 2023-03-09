@@ -1,0 +1,6 @@
+.pytest_cache
+**_pycache__/
+db.sqlite3
+.env
+.coverage
+.idea
