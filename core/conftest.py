@@ -7,6 +7,7 @@ register(factories.CategoryFactory)
 register(factories.BrandFactory)
 register(factories.ProductFactory)
 
+
 @pytest.fixture
 def api_client():
     return APIClient
