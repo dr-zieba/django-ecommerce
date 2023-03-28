@@ -1,3 +1,4 @@
+from django.db import connection
 from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -32,7 +33,10 @@ class ProductView(viewsets.ViewSet):
     lookup_field = "slug"
 
     def retrieve(self, request, slug=None):
-        serializer = ProductSerializer(self.queryset.filter(slug=slug), many=True)
+        serializer = ProductSerializer(
+            self.queryset.filter(slug=slug).select_related("category", "brand"),
+            many=True,
+        )
         return Response(serializer.data)
 
     @extend_schema(responses=ProductSerializer)
