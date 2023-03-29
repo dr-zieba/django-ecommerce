@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema
 from .models import Category, Brand, Product
 from .serializers import CategorySerializer, BrandSerializer, ProductSerializer
+from django.db import models
 
 # Create your views here.
 
@@ -29,7 +30,7 @@ class BrandView(viewsets.ViewSet):
 
 
 class ProductView(viewsets.ViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().is_active()
     lookup_field = "slug"
 
     def retrieve(self, request, slug=None):

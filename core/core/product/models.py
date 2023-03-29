@@ -4,6 +4,11 @@ from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
 
 
+class ActiveFilter(models.QuerySet):
+    def is_active(self):
+        return self.filter(is_active=True)
+
+
 class Category(MPTTModel):
     name = models.CharField(max_length=100, unique=True)
     # field to store relation between categories
@@ -34,6 +39,8 @@ class Product(models.Model):
         "Category", on_delete=models.SET_NULL, null=True, blank=True
     )
     is_active = models.BooleanField(default=False)
+
+    objects = ActiveFilter().as_manager()
 
     def __str__(self):
         return self.name
