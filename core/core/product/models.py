@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 # Library to store indented data efectivly
@@ -55,7 +56,14 @@ class ProductLine(models.Model):
         Product, on_delete=models.CASCADE, related_name="product_line"
     )
     is_active = models.BooleanField(default=False)
-    order = OrderField(unique_for_field="product", blank=True, null=True)
+    order = OrderField(unique_for_field="product", blank=True)
+
+    def clean_fields(self, exclude=None):
+        super().clean_fields(exclude=exclude)
+        queryset = ProductLine.objects.filter(product=self.product)
+        for obj in queryset:
+            if obj.id != self.id and obj.order == self.order:
+                raise ValidationError("Order value must be uique")
 
     def __str__(self):
         return self.sku

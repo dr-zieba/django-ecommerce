@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.core import checks
 
@@ -21,6 +22,18 @@ class OrderField(models.PositiveIntegerField):
 
     def pre_save(self, model_instance, add):
         if getattr(model_instance, self.attname) is None:
-            print(getattr(model_instance, self.attname))
-            return 1
-        return super().pre_save(model_instance, add)
+            queryset = self.model.objects.all()
+            try:
+                query = {
+                    self.unique_for_field: getattr(
+                        model_instance, self.unique_for_field
+                    )
+                }
+                query_filtered = queryset.filter(**query)
+                last_order = query_filtered.latest(self.attname)
+                value_of_order = last_order.order + 1
+            except ObjectDoesNotExist:
+                value_of_order = 1
+            return value_of_order
+        else:
+            return super().pre_save(model_instance, add)
