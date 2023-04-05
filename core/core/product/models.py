@@ -58,12 +58,15 @@ class ProductLine(models.Model):
     is_active = models.BooleanField(default=False)
     order = OrderField(unique_for_field="product", blank=True)
 
-    def clean_fields(self, exclude=None):
-        super().clean_fields(exclude=exclude)
+    def clean(self):
         queryset = ProductLine.objects.filter(product=self.product)
         for obj in queryset:
             if obj.id != self.id and obj.order == self.order:
                 raise ValidationError("Order value must be uique")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super(ProductLine, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.sku
