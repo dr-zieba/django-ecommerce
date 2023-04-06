@@ -13,6 +13,8 @@ class ActiveFilter(models.QuerySet):
 
 class Category(MPTTModel):
     name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=255)
+
     # field to store relation between categories
     # on_delete=models.PROTECT: prevents from delete if child exists
     parent = TreeForeignKey("self", on_delete=models.PROTECT, null=True, blank=True)
