@@ -71,4 +71,26 @@ class ProductLine(models.Model):
         return super(ProductLine, self).save(*args, **kwargs)
 
     def __str__(self):
-        return self.sku
+        return str(self.sku)
+
+
+class ProductImage(models.Model):
+    alternative_text = models.CharField(max_length=255)
+    url = models.ImageField(upload_to=None)
+    product_line = models.ForeignKey(
+        ProductLine, on_delete=models.CASCADE, related_name="product_image"
+    )
+    order = OrderField(unique_for_field="product_line", blank=True)
+
+    def clean(self):
+        queryset = ProductImage.objects.filter(product_line=self.product_line)
+        for obj in queryset:
+            if obj.id != self.id and obj.order == self.order:
+                raise ValidationError("Order value must be uique")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super(ProductImage, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.url)
