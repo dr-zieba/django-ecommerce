@@ -5,7 +5,7 @@ pytestmark = pytest.mark.django_db
 
 """
     Factories are registered in factory.py
-    To use factory class referance is in lowercase with _ as word separator eq.
+    To use factory class reference is in lowercase with _ as word separator eq.
     CategoryFactory -> category_factory
 """
 
@@ -44,3 +44,9 @@ class TestProductLine:
         product_line_factory(order=1, product=obj)
         with pytest.raises(ValidationError):
             product_line_factory(order=1, product=obj)
+
+
+class TestProductImage:
+    def test_str_method(self, product_image_factory):
+        obj = product_image_factory()
+        assert obj.__str__() == "https://test.com/test.jpg"

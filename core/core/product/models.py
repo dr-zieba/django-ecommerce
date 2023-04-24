@@ -50,6 +50,24 @@ class Product(models.Model):
         return self.name
 
 
+class Attribute(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.name
+
+
+class AttributeValue(models.Model):
+    attribute_value = models.CharField(max_length=100)
+    attribute = models.ForeignKey(
+        Attribute, on_delete=models.CASCADE, related_name="attribute_value"
+    )
+
+    def __str__(self):
+        return f"{self.attribute}{self.attribute_value}"
+
+
 class ProductLine(models.Model):
     price = models.DecimalField(decimal_places=2, max_digits=5)
     sku = models.CharField(max_length=100)
@@ -58,6 +76,14 @@ class ProductLine(models.Model):
         Product, on_delete=models.CASCADE, related_name="product_line"
     )
     is_active = models.BooleanField(default=False)
+    attribute_value = models.ManyToManyField(
+        AttributeValue,
+        through="ProductLineAttributeValues",
+        related_name="product_line_attribute_value",
+    )
+    product_type = models.ForeignKey(
+        "ProductType", on_delete=models.PROTECT, related_name="product_type"
+    )
     order = OrderField(unique_for_field="product", blank=True)
 
     def clean(self):
@@ -72,6 +98,22 @@ class ProductLine(models.Model):
 
     def __str__(self):
         return str(self.sku)
+
+
+class ProductLineAttributeValues(models.Model):
+    attribute_value = models.ForeignKey(
+        AttributeValue,
+        on_delete=models.CASCADE,
+        related_name="attribute_value_product_line",
+    )
+    product_line = models.ForeignKey(
+        ProductLine,
+        on_delete=models.CASCADE,
+        related_name="product_line_attribute_value",
+    )
+
+    class Meta:
+        unique_together = ("attribute_value", "product_line")
 
 
 class ProductImage(models.Model):
@@ -94,3 +136,25 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return str(self.url)
+
+
+class ProductType(models.Model):
+    name = models.CharField(max_length=100)
+    attribute = models.ManyToManyField(
+        Attribute, through="ProductTypeAttribute", related_name="product_type_attribute"
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class ProductTypeAttribute(models.Model):
+    product_type = models.ForeignKey(
+        ProductType, on_delete=models.CASCADE, related_name="product_type_attribute"
+    )
+    attribute = models.ForeignKey(
+        Attribute, on_delete=models.CASCADE, related_name="attribute_product_type"
+    )
+
+    class Meta:
+        unique_together = ("product_type", "attribute")

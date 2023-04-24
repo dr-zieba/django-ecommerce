@@ -7,6 +7,7 @@ register(factories.CategoryFactory)
 register(factories.BrandFactory)
 register(factories.ProductFactory)
 register(factories.ProductLineFactory)
+register(factories.ProductImageFactory)
 
 
 @pytest.fixture

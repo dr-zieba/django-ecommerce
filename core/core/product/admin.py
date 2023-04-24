@@ -2,7 +2,16 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 from django.urls import reverse
 
-from .models import Brand, Category, Product, ProductLine, ProductImage
+from .models import (
+    Brand,
+    Category,
+    Product,
+    ProductLine,
+    ProductImage,
+    AttributeValue,
+    Attribute,
+    ProductType,
+)
 
 
 class EditLineInLine:
@@ -32,9 +41,26 @@ class ProductImageInline(admin.TabularInline):
     model = ProductImage
 
 
+class AttributeValueInLine(admin.TabularInline):
+    # model specified as below due AttributeValue do not have FK to ProductLine model
+    # used name of relation field
+    model = AttributeValue.product_line_attribute_value.through
+
+
 class ProductLineAdmin(admin.ModelAdmin):
     inlines = [
         ProductImageInline,
+        AttributeValueInLine,
+    ]
+
+
+class AttributeInLine(admin.TabularInline):
+    model = Attribute.product_type_attribute.through
+
+
+class ProductTypeInLine(admin.ModelAdmin):
+    inlines = [
+        AttributeInLine,
     ]
 
 
@@ -43,3 +69,6 @@ admin.site.register(ProductLine, ProductLineAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Brand)
 admin.site.register(Category)
+admin.site.register(Attribute)
+admin.site.register(AttributeValue)
+admin.site.register(ProductType, ProductTypeInLine)
