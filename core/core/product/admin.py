@@ -3,7 +3,6 @@ from django.utils.safestring import mark_safe
 from django.urls import reverse
 
 from .models import (
-    Brand,
     Category,
     Product,
     ProductLine,
@@ -67,7 +66,6 @@ class ProductTypeInLine(admin.ModelAdmin):
 # Register your models here.
 admin.site.register(ProductLine, ProductLineAdmin)
 admin.site.register(Product, ProductAdmin)
-admin.site.register(Brand)
 admin.site.register(Category)
 admin.site.register(Attribute)
 admin.site.register(AttributeValue)

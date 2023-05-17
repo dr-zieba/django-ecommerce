@@ -12,12 +12,13 @@ class ActiveFilter(models.QuerySet):
 
 
 class Category(MPTTModel):
-    name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(max_length=255)
-
+    name = models.CharField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, unique=True)
+    is_active = models.BooleanField(default=False)
     # field to store relation between categories
     # on_delete=models.PROTECT: prevents from delete if child exists
     parent = TreeForeignKey("self", on_delete=models.PROTECT, null=True, blank=True)
+    objects = ActiveFilter.as_manager()
 
     class MPTTMeta:
         order_insertion_by = ["name"]
@@ -26,25 +27,21 @@ class Category(MPTTModel):
         return self.name
 
 
-class Brand(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-
-    def __str__(self):
-        return self.name
-
-
 class Product(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=255)
+    pid = models.CharField(max_length=10, unique=True)
     description = models.TextField(blank=True)
     is_digital = models.BooleanField(default=False)
-    brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
     category = TreeForeignKey(
-        "Category", on_delete=models.SET_NULL, null=True, blank=True
+        "Category", on_delete=models.PROTECT, null=True, blank=True
     )
     is_active = models.BooleanField(default=False)
-
+    product_type = models.ForeignKey(
+        "ProductType", on_delete=models.PROTECT, related_name="product_type"
+    )
     objects = ActiveFilter().as_manager()
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
 
     def __str__(self):
         return self.name
@@ -65,7 +62,7 @@ class AttributeValue(models.Model):
     )
 
     def __str__(self):
-        return f"{self.attribute}{self.attribute_value}"
+        return f"{self.attribute.name}-{self.attribute_value}"
 
 
 class ProductLine(models.Model):
@@ -73,7 +70,7 @@ class ProductLine(models.Model):
     sku = models.CharField(max_length=100)
     stock = models.IntegerField()
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="product_line"
+        Product, on_delete=models.PROTECT, related_name="product_line"
     )
     is_active = models.BooleanField(default=False)
     attribute_value = models.ManyToManyField(
@@ -82,9 +79,12 @@ class ProductLine(models.Model):
         related_name="product_line_attribute_value",
     )
     product_type = models.ForeignKey(
-        "ProductType", on_delete=models.PROTECT, related_name="product_type"
+        "ProductType", on_delete=models.PROTECT, related_name="product_line_type"
     )
     order = OrderField(unique_for_field="product", blank=True)
+    weight = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    objects = ActiveFilter.as_manager()
 
     def clean(self):
         queryset = ProductLine.objects.filter(product=self.product)
@@ -115,6 +115,25 @@ class ProductLineAttributeValues(models.Model):
     class Meta:
         unique_together = ("attribute_value", "product_line")
 
+    def clean(self):
+        gs = (
+            ProductLineAttributeValues.objects.filter(
+                attribute_value=self.attribute_value
+            )
+            .filter(product_line=self.product_line)
+            .exists()
+        )
+        if not gs:
+            igs = Attribute.objects.filter(
+                attribute_value__product_line_attribute_value=self.product_line
+            ).values_list("pk")
+            if self.attribute_value.attribute.id in list(igs):
+                raise ValidationError("Attribute already exists")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super(ProductLineAttributeValues, self).save(*args, **kwargs)
+
 
 class ProductImage(models.Model):
     alternative_text = models.CharField(max_length=255)
@@ -135,11 +154,12 @@ class ProductImage(models.Model):
         return super(ProductImage, self).save(*args, **kwargs)
 
     def __str__(self):
-        return str(self.url)
+        return str(self.product_line.sku)
 
 
 class ProductType(models.Model):
     name = models.CharField(max_length=100)
+    parent = models.ForeignKey("self", on_delete=models.PROTECT, null=True, blank=True)
     attribute = models.ManyToManyField(
         Attribute, through="ProductTypeAttribute", related_name="product_type_attribute"
     )
