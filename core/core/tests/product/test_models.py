@@ -202,9 +202,21 @@ class TestAttribute:
         obj = attribute_factory(name="test_attr")
         assert obj.__str__() == "test_attr"
 
+    def test_name_max_length(self, attribute_factory):
+        name = "a" * 101
+        obj = attribute_factory(name=name)
+        with pytest.raises(ValidationError):
+            obj.full_clean()
+
 
 class TestAttributeValue:
     def test_str_method(self, attribute_value_factory, attribute_factory):
         obj_a = attribute_factory(name="test_attr")
         obj_b = attribute_value_factory(attribute_value="test_val", attribute=obj_a)
         assert obj_b.__str__() == "test_attr-test_val"
+
+    def test_attribute_value_max_length(self, attribute_value_factory):
+        attribute_value = "a" * 101
+        obj = attribute_value_factory(attribute_value=attribute_value)
+        with pytest.raises(ValidationError):
+            obj.full_clean()

@@ -40,6 +40,12 @@ class ProductFactory(factory.django.DjangoModelFactory):
     is_active = True
     product_type = factory.SubFactory(ProductTypeFactory)
 
+    @factory.post_generation
+    def attribute_value(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+        self.attribute_value.add(*extracted)
+
 
 class ProductLineFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -54,10 +60,10 @@ class ProductLineFactory(factory.django.DjangoModelFactory):
     product_type = factory.SubFactory(ProductTypeFactory)
 
     @factory.post_generation
-    def attribute_value(self, created, extraced, **kwargs):
-        if not created or not extraced:
+    def attribute_value(self, created, extracted, **kwargs):
+        if not created or not extracted:
             return
-        self.attribute_value.add(*extraced)
+        self.attribute_value.add(*extracted)
 
 
 class ProductTypeFactory(factory.django.DjangoModelFactory):
