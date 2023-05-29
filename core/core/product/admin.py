@@ -32,18 +32,24 @@ class ProductInLine(EditLineInLine, admin.TabularInline):
     readonly_fields = ("edit",)
 
 
-class ProductAdmin(admin.ModelAdmin):
-    inlines = [ProductInLine]
-
-
-class ProductImageInline(admin.TabularInline):
-    model = ProductImage
-
-
 class AttributeValueInLine(admin.TabularInline):
     # model specified as below due AttributeValue do not have FK to ProductLine model
     # used name of relation field
     model = AttributeValue.product_line_attribute_value.through
+
+
+class AttributeValueProductInLine(admin.TabularInline):
+    # model specified as below due AttributeValue do not have FK to ProductLine model
+    # used name of relation field
+    model = AttributeValue.product_attr_value.through
+
+
+class ProductAdmin(admin.ModelAdmin):
+    inlines = [ProductInLine, AttributeValueProductInLine]
+
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
 
 
 class ProductLineAdmin(admin.ModelAdmin):

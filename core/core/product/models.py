@@ -40,6 +40,11 @@ class Product(models.Model):
     product_type = models.ForeignKey(
         "ProductType", on_delete=models.PROTECT, related_name="product_type"
     )
+    attribute_value = models.ManyToManyField(
+        "AttributeValue",
+        through="ProductAttributeValue",
+        related_name="product_attr_value",
+    )
     objects = ActiveFilter().as_manager()
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
 
@@ -63,6 +68,18 @@ class AttributeValue(models.Model):
 
     def __str__(self):
         return f"{self.attribute.name}-{self.attribute_value}"
+
+
+class ProductAttributeValue(models.Model):
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="product_attribute_value"
+    )
+    attribute_value = models.ForeignKey(
+        AttributeValue, on_delete=models.CASCADE, related_name="attribute_value_product"
+    )
+
+    class Meta:
+        unique_together = ["product", "attribute_value"]
 
 
 class ProductLine(models.Model):
